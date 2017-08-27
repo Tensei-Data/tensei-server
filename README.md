@@ -1,5 +1,8 @@
 # Tensei-Server
 
+[![Build Status](https://travis-ci.org/Tensei-Data/tensei-server.svg?branch=master)](https://travis-ci.org/Tensei-Data/tensei-server)
+[![codecov](https://codecov.io/gh/Tensei-Data/tensei-server/branch/master/graph/badge.svg)](https://codecov.io/gh/Tensei-Data/tensei-server)
+
 The server is the central of the Tensei (転成) system. It uses an actor
 system and coordinates the connected agents.
 
