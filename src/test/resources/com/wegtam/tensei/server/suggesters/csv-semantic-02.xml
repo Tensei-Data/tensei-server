@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dfasdl xmlns="http://www.dfasdl.org/DFASDL"
+        semantic="niem">
+  <str id="humidity" s="humidity" stop-sign=","/>
+  <str id="wind" s="wind" stop-sign=","/>
+  <str id="weather" s="weather" />
+</dfasdl>

@@ -1,0 +1,4 @@
+# Ignore key files.
+*_key
+*_rsa
+*_rsa.pub

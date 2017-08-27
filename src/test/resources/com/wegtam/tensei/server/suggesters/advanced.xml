@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dfasdl xmlns="http://www.dfasdl.org/DFASDL"
+        semantic="custom">
+  <seq id="companies">
+    <elem id="companies_row">
+      <str id="company_id" db-column-name="id" max-length="36" stop-sign=","/>
+      <str id="name" db-column-name="name" s="companyName" stop-sign="," />
+      <str id="industry" max-length="50" stop-sign=","/>
+      <datetime id="date_entered"/>
+    </elem>
+  </seq>
+  <seq id="contacts">
+    <elem id="contacts_row">
+      <str id="contact_id" db-column-name="id" max-length="36" stop-sign=","/>
+      <str id="title" stop-sign=","/>
+      <str id="name2" db-column-name="name" s="contactFirstName" stop-sign="," />
+      <str id="name3" db-column-name="name2" s="contactLastName" stop-sign="," />
+      <str id="telephone" db-column-name="telephone" stop-sign="," />
+    </elem>
+  </seq>
+  <seq id="employees">
+    <elem id="employees_row">
+      <str id="employee_id" db-column-name="id" max-length="36" stop-sign=","/>
+      <str id="position" stop-sign=","/>
+      <str id="name4" db-column-name="name" s="employeeFirstName" stop-sign="," />
+      <str id="name5" db-column-name="name2" s="employeeLastName" stop-sign="," />
+      <str id="telephone2" db-column-name="telephone" stop-sign="," />
+    </elem>
+  </seq>
+  <seq id="vendors">
+    <elem id="vendors_row">
+      <str id="vendor_id" db-column-name="id" max-length="36" stop-sign=","/>
+      <str id="type" stop-sign=","/>
+      <str id="name6" db-column-name="name" s="vendorFirstName" stop-sign="," />
+      <str id="name7" db-column-name="name2" s="vendorLastName" stop-sign="," />
+      <str id="telephone3" db-column-name="telephone" stop-sign="," />
+    </elem>
+  </seq>
+</dfasdl>

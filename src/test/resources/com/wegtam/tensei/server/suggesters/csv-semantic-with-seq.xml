@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dfasdl xmlns="http://www.dfasdl.org/DFASDL"
+        semantic="niem">
+  <seq id="columns">
+    <elem id="name">
+      <str id="name-value" s="lastName" stop-sign=","/>
+    </elem>
+    <elem id="email">
+      <str id="email-value" s="emailAddress" stop-sign=","/>
+    </elem>
+    <elem id="phone">
+      <str id="phone-value" s="phoneNumber" />
+    </elem>
+  </seq>
+</dfasdl>

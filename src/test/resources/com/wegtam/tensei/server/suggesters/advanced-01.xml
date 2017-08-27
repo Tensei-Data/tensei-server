@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dfasdl xmlns="http://www.dfasdl.org/DFASDL"
+        semantic="custom">
+  <seq id="companies">
+    <elem id="companies_row">
+      <str id="company_id" db-column-name="id" max-length="36" stop-sign=","/>
+      <str id="title" db-column-name="title" s="companyName" stop-sign="," />
+      <datetime id="date_entered"/>
+    </elem>
+  </seq>
+  <seq id="employees">
+    <elem id="employees_row">
+      <str id="employee_id" db-column-name="id" max-length="36" stop-sign=","/>
+      <str id="fname" db-column-name="fname" s="employeeFirstName" stop-sign="," />
+      <str id="lname" db-column-name="lname" s="employeeLastName" stop-sign="," />
+    </elem>
+  </seq>
+  <seq id="vendors">
+    <elem id="vendors_row">
+      <str id="vendor_id" db-column-name="id" max-length="36" stop-sign=","/>
+      <str id="vfname" db-column-name="vfname" s="vendorFirstName" stop-sign="," />
+      <str id="vlname" db-column-name="vlname" s="vendorLastName" stop-sign="," />
+    </elem>
+  </seq>
+</dfasdl>

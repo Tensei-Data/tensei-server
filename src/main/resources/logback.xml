@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="false">
+  <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+    <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+      <level>${tensei.server.loglevel.console:-INFO}</level>
+    </filter>
+    <withJansi>true</withJansi>
+    <encoder>
+      <pattern>%date %highlight(%-5level) %cyan(%logger{0}) - %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <appender name="file" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <!--See also http://logback.qos.ch/manual/appenders.html#RollingFileAppender-->
+    <file>${tensei.server.logdir:-./logs}/tensei-server.log</file>
+    <encoder>
+      <!-- Maybe we should add `akkaSource` to the log? -->
+      <pattern>%date %-5level %logger{0} - %msg%n</pattern>
+    </encoder>
+    <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+      <maxIndex>10</maxIndex>
+      <FileNamePattern>${tensei.server.logdir:-./logs}/tensei-server.log.%i</FileNamePattern>
+    </rollingPolicy>
+    <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+      <MaxFileSize>${tensei.server.maxlogfilesize:-20MB}</MaxFileSize>
+    </triggeringPolicy>
+  </appender>
+
+  <appender name="async-file" class="ch.qos.logback.classic.AsyncAppender">
+    <appender-ref ref="file"/>
+    <queueSize>50000</queueSize>
+    <discardingThreshold>0</discardingThreshold>
+  </appender>
+
+  <logger name="Remoting" level="warn" additivity="false">
+    <appender-ref ref="console"/>
+    <appender-ref ref="async-file"/>
+  </logger>
+
+  <logger name="akka.remote.EndpointWriter" level="off" additivity="false">
+  </logger>
+
+  <logger name="com.wegtam.tensei.server" level="${tensei.server.loglevel:-INFO}" additivity="false">
+    <appender-ref ref="console"/>
+    <appender-ref ref="async-file"/>
+  </logger>
+
+  <root>
+    <appender-ref ref="console"/>
+    <appender-ref ref="async-file"/>
+  </root>
+</configuration>

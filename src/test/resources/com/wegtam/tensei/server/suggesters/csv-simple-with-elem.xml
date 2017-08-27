@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dfasdl xmlns="http://www.dfasdl.org/DFASDL"
+        semantic="niem">
+  <elem id="name-wrapper">
+    <str id="name" stop-sign=","/>
+  </elem>
+  <elem id="phone-wrapper">
+    <str id="phone" stop-sign=","/>
+  </elem>
+  <elem id="email-wrapper">
+    <str id="email"/>
+  </elem>
+</dfasdl>
