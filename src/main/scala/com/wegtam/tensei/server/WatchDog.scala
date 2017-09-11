@@ -115,6 +115,7 @@ class WatchDog extends Actor with ActorLogging {
     self,
     CleanupUnreachableFrontendNodes
   )
+  @SuppressWarnings(Array("org.wartremover.warts.Var"))
   private var unreachableFrontendNodes: Queue[UniqueAddress] = Queue.empty
 
   def now: Long = System.currentTimeMillis()
@@ -134,11 +135,12 @@ class WatchDog extends Actor with ActorLogging {
   }
 
   override def postStop(): Unit = {
-    unreachableFrontendCleanup.cancel()
+    val _ = unreachableFrontendCleanup.cancel()
     ClusterClientReceptionist(context.system).unregisterService(self)
     cluster.unsubscribe(self)
   }
 
+  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   override def receive: Receive = {
     case GlobalMessages.ReportingTo(ref, id) =>
       log.debug("Got ReportingToCaller message from {}.", ref.path)
@@ -179,8 +181,9 @@ class WatchDog extends Actor with ActorLogging {
     * Handle reporting messages.
     *
     * @param ref The actor ref passed by the reporting message.
+    * @param id  An option to the agent id.
     */
-  def handleReportingMessage(ref: ActorRef, id: Option[String] = None): Unit =
+  def handleReportingMessage(ref: ActorRef, id: Option[String]): Unit =
     if (ref.path.name == ClusterConstants.topLevelActorNameOnAgent) {
       id.foreach { agentId =>
         log.info("Agent {} reporting in.", agentId)
@@ -188,6 +191,14 @@ class WatchDog extends Actor with ActorLogging {
         chef ! WatchDogMessages.AgentUp(agentId, ref, now)
       }
     }
+
+  /**
+    * Handle reporting messages without agent id.
+    *
+    * @param ref The actor ref passed by the reporting message.
+    */
+  def handleReportingMessage(ref: ActorRef): Unit =
+    handleReportingMessage(ref, None)
 
   /**
     * Handle `MemberUp` events.

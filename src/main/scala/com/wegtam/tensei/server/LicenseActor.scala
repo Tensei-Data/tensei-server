@@ -50,10 +50,11 @@ class LicenseActor(license: TenseiLicense) extends Actor with ActorLogging {
 
   @throws[Exception](classOf[Exception])
   override def postStop(): Unit = {
-    reportAllowedAgentsTimer.cancel()
+    val _ = reportAllowedAgentsTimer.cancel()
     super.postStop()
   }
 
+  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   override def receive: Receive = {
     case ReportLicenseEntitiesData =>
       sender() ! LicenseEntitiesData(license.agents,

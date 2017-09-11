@@ -27,6 +27,7 @@ object DummyActor {
   * A dummy actor for testing.
   */
 class DummyActor extends Actor with ActorLogging {
+  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   override def receive: Receive = {
     case _ =>
       log.debug("Got a message...")

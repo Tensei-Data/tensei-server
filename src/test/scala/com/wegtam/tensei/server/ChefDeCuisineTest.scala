@@ -32,7 +32,7 @@ class ChefDeCuisineTest extends ActorSpec with BeforeAndAfterEach {
   val chef = TestFSMRef(new ChefDeCuisine())
 
   override def beforeEach(): Unit =
-    chef.setState(ChefDeCuisineState.Running, ChefDeCuisineData())
+    chef.setState(ChefDeCuisineState.Running, ChefDeCuisineData.initialise(licenseActor = None))
 
   describe("ChefDeCuisine") {
     describe("when receiving AgentUp") {
@@ -57,7 +57,8 @@ class ChefDeCuisineTest extends ActorSpec with BeforeAndAfterEach {
         it(
           "should update the agent information list with an unauthorized agent and ask the license actor"
         ) {
-          chef.setState(ChefDeCuisineState.Running, ChefDeCuisineData(licenseActor = Option(self)))
+          chef.setState(ChefDeCuisineState.Running,
+                        ChefDeCuisineData.initialise(licenseActor = Option(self)))
           val dummy     = TestActorRef(DummyActor.props())
           val timestamp = System.currentTimeMillis()
           val expectedInformation =

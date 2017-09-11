@@ -56,17 +56,27 @@ trait BaseSuggester extends DocumentHelpers {
   /**
     * Try to go upwards the elment tree and return the parent elements.
     *
-    * @param e An xml dom element.
+    * @param e       An xml dom element.
+    * @param parents A list of parent elements.
     * @return A list if parent elements e.g. the ancestors.
     */
-  def getAncestorElements(e: Element,
-                          parents: List[Element] = List.empty[Element]): List[Element] = {
+  @SuppressWarnings(Array("org.wartremover.warts.AsInstanceOf", "org.wartremover.warts.Null"))
+  def getAncestorElements(e: Element, parents: List[Element]): List[Element] = {
     val p = e.getParentNode.asInstanceOf[Element]
     if (p == null || p.getNodeName == ElementNames.ROOT)
       parents
     else
       getAncestorElements(p, parents ::: p :: Nil)
   }
+
+  /**
+    * Try to go upwards the elment tree and return the parent elements.
+    *
+    * @param e An xml dom element.
+    * @return A list if parent elements e.g. the ancestors.
+    */
+  def getAncestorElements(e: Element): List[Element] =
+    getAncestorElements(e, List.empty)
 
   /**
     * Extract all ids and their meta informations from the given dfasdl.
