@@ -38,6 +38,7 @@ class AdvancedSemanticsMappingSuggesterActor
     extends AdvancedSemanticsSuggester
     with Actor
     with ActorLogging {
+  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   override def receive: Receive = {
     case MappingSuggesterMessages.SuggestMapping(cookbook, mode, answerTo) =>
       log.debug("Got advanced semantics suggest mapping message.")

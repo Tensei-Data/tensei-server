@@ -120,7 +120,7 @@ lazy val commonSettings =
       "-source", "1.8",
       "-target", "1.8"
     ),
-    //wartremoverWarnings in (Compile, compile) ++= Warts.unsafe
+    wartremoverWarnings in (Compile, compile) ++= Warts.unsafe
   )
 
 lazy val resolverSettings =

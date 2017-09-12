@@ -37,60 +37,71 @@ trait SemanticSuggester extends BaseSuggester {
     * @param cookbook The base cookbook.
     * @return A scalaz.Validation that holds either the error messages or the resulting cookbook.
     */
+  @SuppressWarnings(Array("org.wartremover.warts.Var"))
   override def suggest(cookbook: Cookbook): ValidationNel[String, Cookbook] =
     if (cookbook.sources.isEmpty || cookbook.target.isEmpty)
       s"No sources or target DFASDL defined in Cookbook '${cookbook.id}'!".failNel[Cookbook]
     else {
-      val sources       = cookbook.sources.map(dfasdl => extractSemanticInformationsFromDfasdl(dfasdl))
-      val target        = extractSemanticInformationsFromDfasdl(cookbook.target.get)
+      val sourcesSemantics =
+        cookbook.sources.map(dfasdl => extractSemanticInformationsFromDfasdl(dfasdl))
+      val targetSemantics =
+        cookbook.target.map(t => extractSemanticInformationsFromDfasdl(t)).getOrElse(Map.empty)
       var recipeCounter = 0L
       val recipes       = new ListBuffer[mutable.HashMap[String, Recipe]]()
-      sources.foreach(info => {
+      sourcesSemantics.foreach(info => {
         val recipeBuffer = new mutable.HashMap[String, Recipe]()
-        recipes += recipeBuffer
+        recipes.append(recipeBuffer)
         val mappingCandidates: List[(String, IdInformation)] =
-          info.filter(ref => target.get(ref._1).isDefined).toList
-        mappingCandidates foreach {
+          info.filter(ref => targetSemantics.get(ref._1).isDefined).toList
+        mappingCandidates.foreach {
           sourceSemantic =>
-            val semantic   = sourceSemantic._2.ref.elementId
-            val sourceInfo = sourceSemantic._2
-            val targetInfo = target.find(e => e._1 == sourceSemantic._1)
-            require(targetInfo.isDefined,
+            val semantic    = sourceSemantic._2.ref.elementId
+            val sourceInfo  = sourceSemantic._2
+            val targetInfoO = targetSemantics.find(e => e._1 == sourceSemantic._1)
+            require(targetInfoO.isDefined,
                     s"No target element information found for source element $sourceInfo!")
-            if (sourceInfo.isInChoice || sourceInfo.isInSequence || targetInfo.get._2.isInChoice || targetInfo.get._2.isInSequence) {
-              if (sourceInfo.isInSequence && targetInfo.get._2.isInSequence) {
-                val parentSequence = sourceInfo.ancestors.find(
-                  e => StructureElementType.isSequence(getStructureElementType(e.getNodeName))
-                )
-                val recipe =
-                  if (recipeBuffer.get(parentSequence.get.getAttribute("id")).isDefined) {
-                    val r = recipeBuffer(parentSequence.get.getAttribute("id"))
-                    r.copy(
-                      mappings = r.mappings ::: MappingTransformation(
-                        List(sourceInfo.ref),
-                        List(targetInfo.get._2.ref)
-                      ) :: Nil
-                    )
-                  } else {
-                    recipeCounter += 1
-                    Recipe(
-                      s"auto-generated-$recipeCounter",
-                      MapOneToOne,
-                      List(
-                        MappingTransformation(List(sourceInfo.ref), List(targetInfo.get._2.ref))
+            targetInfoO.foreach {
+              targetInfo =>
+                if (sourceInfo.isInChoice || sourceInfo.isInSequence || targetInfo._2.isInChoice || targetInfo._2.isInSequence) {
+                  if (sourceInfo.isInSequence && targetInfo._2.isInSequence) {
+                    sourceInfo.ancestors
+                      .find(
+                        e => StructureElementType.isSequence(getStructureElementType(e.getNodeName))
                       )
-                    )
+                      .foreach {
+                        parentSequence =>
+                          val recipe =
+                            if (recipeBuffer.get(parentSequence.getAttribute("id")).isDefined) {
+                              val r = recipeBuffer(parentSequence.getAttribute("id"))
+                              r.copy(
+                                mappings = r.mappings ::: MappingTransformation(
+                                  List(sourceInfo.ref),
+                                  List(targetInfo._2.ref)
+                                ) :: Nil
+                              )
+                            } else {
+                              recipeCounter += 1
+                              Recipe(
+                                s"auto-generated-$recipeCounter",
+                                MapOneToOne,
+                                List(
+                                  MappingTransformation(List(sourceInfo.ref),
+                                                        List(targetInfo._2.ref))
+                                )
+                              )
+                            }
+                          recipeBuffer += (parentSequence.getAttribute("id") -> recipe)
+                      }
                   }
-                recipeBuffer += (parentSequence.get.getAttribute("id") -> recipe)
-              }
-            } else {
-              recipeCounter += 1
-              val recipe = Recipe(
-                s"auto-generated-$recipeCounter",
-                MapOneToOne,
-                List(MappingTransformation(List(sourceInfo.ref), List(targetInfo.get._2.ref)))
-              )
-              recipeBuffer += (semantic -> recipe)
+                } else {
+                  recipeCounter += 1
+                  val recipe = Recipe(
+                    s"auto-generated-$recipeCounter",
+                    MapOneToOne,
+                    List(MappingTransformation(List(sourceInfo.ref), List(targetInfo._2.ref)))
+                  )
+                  val _ = recipeBuffer += (semantic -> recipe)
+                }
             }
         }
       })

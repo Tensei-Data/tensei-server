@@ -35,6 +35,7 @@ object SimpleMappingSuggesterActor {
   * An actor that provides a simple mapping suggester.
   */
 class SimpleMappingSuggesterActor extends SimpleSuggester with Actor with ActorLogging {
+  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   override def receive: Receive = {
     case MappingSuggesterMessages.SuggestMapping(cookbook, mode, answerTo) =>
       log.debug("Got suggest mapping message.")

@@ -62,12 +62,24 @@ object ChefDeCuisine {
     * @param reportAgentsInformationsTo  A set of actor refs that will receive updates to agent informations.
     * @param watchdog                    An actor ref pointing to the watchdog actor.
     */
-  case class ChefDeCuisineData(
-      agents: Map[String, AgentInformation] = Map.empty[String, AgentInformation],
-      licenseActor: Option[ActorRef] = None,
-      reportAgentsInformationsTo: Set[ActorRef] = Set.empty[ActorRef],
-      watchdog: Option[ActorRef] = None
+  final case class ChefDeCuisineData(
+      agents: Map[String, AgentInformation],
+      licenseActor: Option[ActorRef],
+      reportAgentsInformationsTo: Set[ActorRef],
+      watchdog: Option[ActorRef]
   )
+
+  object ChefDeCuisineData {
+
+    def initialise(licenseActor: Option[ActorRef]): ChefDeCuisineData =
+      ChefDeCuisineData(
+        agents = Map.empty,
+        licenseActor = licenseActor,
+        reportAgentsInformationsTo = Set.empty,
+        watchdog = None
+      )
+
+  }
 }
 
 /**
@@ -125,7 +137,8 @@ class ChefDeCuisine
   ClusterClientReceptionist(context.system)
     .registerService(self) // Register as a service to be available from outside the cluster.
 
-  startWith(ChefDeCuisineState.Booting, ChefDeCuisineData(licenseActor = startLicenseActor))
+  startWith(ChefDeCuisineState.Booting,
+            ChefDeCuisineData.initialise(licenseActor = startLicenseActor))
 
   // This mode is currently only a workaround for the fact that the `onTransition` helper
   // does not fire for the first state (`startWith(...)`).
@@ -150,66 +163,58 @@ class ChefDeCuisine
         log.warning("Unable to initialize watchdog within timeout. Retrying...")
         setTimer(INIT_TIMEOUT_TIMER_NAME, StateTimeout, initTimeout)
         goto(ChefDeCuisineState.Initializing) using data
-      }
-      goto(ChefDeCuisineState.Running) using data
+      } else
+        goto(ChefDeCuisineState.Running) using data
   }
 
   when(ChefDeCuisineState.Running) {
     case Event(TenseiLicenseMessages.ReportLicenseEntitiesData, data) =>
       log.debug("Request for entities data of the license.")
-      if (data.licenseActor.isDefined) {
-        data.licenseActor.get.forward(TenseiLicenseMessages.ReportLicenseEntitiesData)
-      } else
-        sender() ! TenseiLicenseMessages.NoLicenseInstalled
+      data.licenseActor.fold(sender() ! TenseiLicenseMessages.NoLicenseInstalled)(
+        _.forward(TenseiLicenseMessages.ReportLicenseEntitiesData)
+      )
       stay() using data
     case Event(TenseiLicenseMessages.ReportAllowedNumberOfAgents, data) =>
       log.debug("Request for number of allowed agents.")
-      if (data.licenseActor.isDefined) {
-        data.licenseActor.get.forward(TenseiLicenseMessages.ReportAllowedNumberOfAgents)
-      } else
-        sender() ! TenseiLicenseMessages.NoLicenseInstalled
+      data.licenseActor.fold(sender() ! TenseiLicenseMessages.NoLicenseInstalled)(
+        _.forward(TenseiLicenseMessages.ReportAllowedNumberOfAgents)
+      )
       stay() using data
     case Event(TenseiLicenseMessages.ReportAllowedNumberOfConfigurations, data) =>
       log.debug("Request for number of allowed configurations.")
-      if (data.licenseActor.isDefined) {
-        data.licenseActor.get.forward(TenseiLicenseMessages.ReportAllowedNumberOfConfigurations)
-      } else
-        sender() ! TenseiLicenseMessages.NoLicenseInstalled
+      data.licenseActor.fold(sender() ! TenseiLicenseMessages.NoLicenseInstalled)(
+        _.forward(TenseiLicenseMessages.ReportAllowedNumberOfConfigurations)
+      )
       stay() using data
     case Event(TenseiLicenseMessages.ReportAllowedNumberOfCronjobs, data) =>
       log.debug("Request for number of allowed cronjobs.")
-      if (data.licenseActor.isDefined) {
-        data.licenseActor.get.forward(TenseiLicenseMessages.ReportAllowedNumberOfCronjobs)
-      } else
-        sender() ! TenseiLicenseMessages.NoLicenseInstalled
+      data.licenseActor.fold(sender() ! TenseiLicenseMessages.NoLicenseInstalled)(
+        _.forward(TenseiLicenseMessages.ReportAllowedNumberOfCronjobs)
+      )
       stay() using data
     case Event(TenseiLicenseMessages.ReportAllowedNumberOfTriggers, data) =>
       log.debug("Request for number of allowed triggers.")
-      if (data.licenseActor.isDefined) {
-        data.licenseActor.get.forward(TenseiLicenseMessages.ReportAllowedNumberOfTriggers)
-      } else
-        sender() ! TenseiLicenseMessages.NoLicenseInstalled
+      data.licenseActor.fold(sender() ! TenseiLicenseMessages.NoLicenseInstalled)(
+        _.forward(TenseiLicenseMessages.ReportAllowedNumberOfTriggers)
+      )
       stay() using data
     case Event(TenseiLicenseMessages.ReportAllowedNumberOfUsers, data) =>
       log.debug("Request for number of allowed users.")
-      if (data.licenseActor.isDefined) {
-        data.licenseActor.get.forward(TenseiLicenseMessages.ReportAllowedNumberOfUsers)
-      } else
-        sender() ! TenseiLicenseMessages.NoLicenseInstalled
+      data.licenseActor.fold(sender() ! TenseiLicenseMessages.NoLicenseInstalled)(
+        _.forward(TenseiLicenseMessages.ReportAllowedNumberOfUsers)
+      )
       stay() using data
     case Event(TenseiLicenseMessages.ReportLicenseExpirationPeriod, data) =>
       log.debug("Received request for license expiration period.")
-      if (data.licenseActor.isDefined)
-        data.licenseActor.get.forward(TenseiLicenseMessages.ReportLicenseExpirationPeriod)
-      else
-        sender() ! TenseiLicenseMessages.NoLicenseInstalled
+      data.licenseActor.fold(sender() ! TenseiLicenseMessages.NoLicenseInstalled)(
+        _.forward(TenseiLicenseMessages.ReportLicenseExpirationPeriod)
+      )
       stay() using data
     case Event(TenseiLicenseMessages.ReportLicenseMetaData, data) =>
       log.debug("Received request for license meta data.")
-      if (data.licenseActor.isDefined)
-        data.licenseActor.get.forward(TenseiLicenseMessages.ReportLicenseMetaData)
-      else
-        sender() ! TenseiLicenseMessages.NoLicenseInstalled
+      data.licenseActor.fold(sender() ! TenseiLicenseMessages.NoLicenseInstalled)(
+        _.forward(TenseiLicenseMessages.ReportLicenseMetaData)
+      )
       stay() using data
     case Event(TenseiLicenseMessages.UpdateLicense(licenseString), data) =>
       log.info("Received update license message.")
@@ -276,9 +281,8 @@ class ChefDeCuisine
                            AgentAuthorizationState.Unauthorized,
                            timestamp)
         )
-      if (data.licenseActor.isDefined) {
-        data.licenseActor.get ! TenseiLicenseMessages.ReportAllowedNumberOfAgents
-      } else
+      data.licenseActor.foreach(a => a ! TenseiLicenseMessages.ReportAllowedNumberOfAgents)
+      if (data.licenseActor.isEmpty)
         log.error("No license actor available to authorise agents!")
 
       stay() using data.copy(agents = data.agents + (agentId -> agentInformation))
@@ -296,7 +300,8 @@ class ChefDeCuisine
         stay() using newData
       } else {
         log.warning("Got information update from unknown agent '{}'!", stateUpdate.id)
-        if (data.watchdog.isDefined) sender() ! GlobalMessages.ReportToRef(data.watchdog.get) // Force re-registering of agent to watchdog.
+        // Force re-registering of agent to watchdog.
+        data.watchdog.foreach(w => sender() ! GlobalMessages.ReportToRef(w))
         stay() using data
       }
     case Event(MappingSuggesterMessages.SuggestMapping(cookbook, mode, answerTo), data) =>
@@ -319,101 +324,105 @@ class ChefDeCuisine
       log.info("Got statistical analysis message!")
       val availableAgents =
         getAgentsInSpecificState(getConnectedAgents(data.agents), TenseiAgentState.Idle)
-      if (availableAgents.isEmpty) {
-        log.info("No agent is available for a statistical analysis.")
-        val result = CalculateStatisticsResult(
-          "No agent free for statistics calculation!".left[List[StatsResult]],
-          msg.source,
-          msg.cookbook,
-          msg.sourceIds,
-          msg.percent
-        )
-        sender() ! result
-      } else {
-        log.info("Sent the statistical analysis request to an idle agent.")
-        val agentSelection = context.actorSelection(availableAgents.head._2.path)
-        agentSelection.forward(msg)
+      availableAgents.headOption match {
+        case None =>
+          log.info("No agent is available for a statistical analysis.")
+          val result = CalculateStatisticsResult(
+            "No agent free for statistics calculation!".left[List[StatsResult]],
+            msg.source,
+            msg.cookbook,
+            msg.sourceIds,
+            msg.percent
+          )
+          sender() ! result
+        case Some(a) =>
+          log.info("Sent the statistical analysis request to an idle agent.")
+          val agentSelection = context.actorSelection(a._2.path)
+          agentSelection.forward(msg)
       }
       stay() using data
 
     case Event(ServerMessages.StartTransformationConfiguration(message), data) =>
       log.debug("Trying to start transformation configuration.")
-      if (message.isDefined) {
-        val availableAgents =
-          getAgentsInSpecificState(getConnectedAgents(data.agents), TenseiAgentState.Idle)
-        if (availableAgents.isEmpty) {
-          log.info("No Agent available for tk: {}", message.get.uniqueIdentifier.get) // DEBUG
-          val error: StatusMessage = new StatusMessage(
-            reporter = Option(self.path.toSerializationFormatWithAddress(self.path.address)),
-            message = "No agent available!",
-            statusType = StatusType.NoAgentAvailable,
-            cause = None
-          )
-          sender() ! ServerMessages.StartTransformationConfigurationResponse(
-            statusMessage = error.left[String],
-            message.get.uniqueIdentifier
-          )
-        } else {
-          log.info("An agent is available for tk: {}", message.get.uniqueIdentifier.get) // DEBUG
-          val agentSelection = context.actorSelection(availableAgents.head._2.path)
-          agentSelection ! message.get
-          val response = s"Transformation started on agent ${availableAgents.head._1}."
-          sender() ! ServerMessages.StartTransformationConfigurationResponse(
-            statusMessage = response.right[StatusMessage],
-            message.get.uniqueIdentifier
-          )
+      val d = message.fold(data) { msg =>
+        getAgentsInSpecificState(getConnectedAgents(data.agents), TenseiAgentState.Idle).headOption
+          .fold {
+            log.info("No Agent available for tk: {}",
+                     msg.uniqueIdentifier.getOrElse("UNKNOWN-UUID")) // DEBUG
+            val error: StatusMessage = new StatusMessage(
+              reporter = Option(self.path.toSerializationFormatWithAddress(self.path.address)),
+              message = "No agent available!",
+              statusType = StatusType.NoAgentAvailable,
+              cause = None
+            )
+            sender() ! ServerMessages.StartTransformationConfigurationResponse(
+              statusMessage = error.left[String],
+              msg.uniqueIdentifier
+            )
+            data
+          } { a =>
+            log.info("An agent is available for tk: {}",
+                     msg.uniqueIdentifier.getOrElse("UNKNOWN-UUID")) // DEBUG
+            val agentSelection = context.actorSelection(a._2.path)
+            agentSelection ! msg
+            val response = s"Transformation started on agent ${a._1}."
+            sender() ! ServerMessages.StartTransformationConfigurationResponse(
+              statusMessage = response.right[StatusMessage],
+              msg.uniqueIdentifier
+            )
 
-          val agentId = availableAgents.head._2.id
-          val entry   = data.agents.find(_._1 == agentId)
-          if (entry.isDefined) {
-            val newState =
-              data.agents(agentId).workingState.get.copy(state = TenseiAgentState.Working)
-            val newInfo = data.agents(agentId).copy(workingState = Option(newState))
-            val newData = data.copy(agents = data.agents + (agentId -> newInfo))
-            reportAgentsInformations(newData)
-            stay() using newData
+            val agentId = a._2.id
+            val entry   = data.agents.find(_._1 == agentId)
+            if (entry.isDefined) {
+              val newState =
+                data.agents(agentId).workingState.map(_.copy(state = TenseiAgentState.Working))
+              val newInfo = data.agents(agentId).copy(workingState = newState)
+              val newData = data.copy(agents = data.agents + (agentId -> newInfo))
+              reportAgentsInformations(newData)
+              newData
+            } else
+              data
           }
-        }
       }
-      stay() using data
+      stay() using d
     case Event(msg: GlobalMessages.ExtractSchema, data) =>
       log.debug("Got request for schema extration.")
       val availableAgents =
         getAgentsInSpecificState(getConnectedAgents(data.agents), TenseiAgentState.Idle)
-      if (availableAgents.isEmpty) {
-        sender() ! GlobalMessages.ExtractSchemaResult(msg.source,
-                                                      "No agent available!".left[DFASDL])
-      } else {
-        val agentSelection = context.actorSelection(availableAgents.head._2.path)
-        agentSelection.forward(msg)
+      availableAgents.headOption match {
+        case None =>
+          sender() ! GlobalMessages.ExtractSchemaResult(msg.source,
+                                                        "No agent available!".left[DFASDL])
+        case Some(a) =>
+          val agentSelection = context.actorSelection(a._2.path)
+          agentSelection.forward(msg)
       }
       stay() using data
     case Event(msg: GlobalMessages.TransformationCompleted, data) =>
       log.info("Got transformation completed message from agent")
-      if (msg.uuid.isDefined) {
-        log.info("Agent completed transformation configuration with uuid: {}", msg.uuid.get)
+      msg.uuid.foreach { uuid =>
+        log.info("Agent completed transformation configuration with uuid: {}", uuid)
         data.reportAgentsInformationsTo foreach (ref => ref ! msg)
       }
       stay() using data
     case Event(msg: GlobalMessages.TransformationAborted, data) =>
       log.info("Got transformation aborted message from agent")
-      if (msg.uuid.isDefined) {
-        log.info("Agent aborted transformation configuration with uuid: {}", msg.uuid.get)
+      msg.uuid.foreach { uuid =>
+        log.info("Agent aborted transformation configuration with uuid: {}", uuid)
         data.reportAgentsInformationsTo foreach (ref => ref ! msg)
       }
       stay() using data
     case Event(msg: GlobalMessages.TransformationError, data) =>
       log.info("Got transformation error message from agent")
-      if (msg.uuid.isDefined) {
-        log.info("Agent sent error message for transformation configuration with uuid: {}",
-                 msg.uuid.get)
+      msg.uuid.foreach { uuid =>
+        log.info("Agent sent error message for transformation configuration with uuid: {}", uuid)
         data.reportAgentsInformationsTo foreach (ref => ref ! msg)
       }
       stay() using data
     case Event(msg: GlobalMessages.TransformationStarted, data) =>
       log.info("Got transformation started message from agent")
-      if (msg.uuid.isDefined) {
-        log.info("Agent started transformation configuration with uuid: {}", msg.uuid.get)
+      msg.uuid.foreach { uuid =>
+        log.info("Agent started transformation configuration with uuid: {}", uuid)
         data.reportAgentsInformationsTo foreach (ref => ref ! msg)
       }
       stay() using data
@@ -432,7 +441,7 @@ class ChefDeCuisine
 
   whenUnhandled {
     case Event(Terminated(ref), data) =>
-      if (ref == data.watchdog.get) {
+      if (data.watchdog.contains(ref)) {
         log.info("Watchdog crashed, restarting it.")
         goto(ChefDeCuisineState.Initializing) using data.copy(watchdog = None)
       } else if (data.reportAgentsInformationsTo.contains(ref)) {
@@ -472,12 +481,12 @@ class ChefDeCuisine
       stay() using data
     case Event(GlobalMessages.Shutdown, _) =>
       log.warning("Got shutdown signal. Trying to shutdown actor system.")
-      context.system.terminate()
+      val _ = context.system.terminate()
       stop(FSM.Shutdown)
     case Event(GlobalMessages.ReportToRef(ref), data) =>
       log.info("Got ReportToRef({}) signal from {}.", ref.path, sender().path)
       val newData = data.copy(reportAgentsInformationsTo = data.reportAgentsInformationsTo + ref)
-      context watch ref
+      val _       = context watch ref
       ref ! GlobalMessages.ReportingTo(self)
       stay() using newData
     case Event(ServerMessages.ReportAgentsInformations, data) =>

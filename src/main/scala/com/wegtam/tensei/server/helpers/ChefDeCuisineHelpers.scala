@@ -34,6 +34,8 @@ import scalaz._
 /**
   * Some helper functions for the chef de cuisine.
   */
+@SuppressWarnings(Array("org.wartremover.warts.Throw"))
+@throws[IllegalArgumentException](cause = "The master key file has an invalid format!")
 trait ChefDeCuisineHelpers extends CryptoHelpers {
   private final val SEED_BYTES: Array[Byte] = convertHexStringToByteArray(
     "80220B06B0AC89F4B0A649F7CA137570"
@@ -141,7 +143,7 @@ trait ChefDeCuisineHelpers extends CryptoHelpers {
                                state: TenseiAgentState): Map[String, AgentInformation] =
     agents.filter(e => {
       val workingState = e._2.workingState
-      workingState.isDefined && workingState.get.state == state
+      workingState.map(_.state == state).getOrElse(false)
     })
 
   /**
@@ -177,6 +179,7 @@ trait ChefDeCuisineHelpers extends CryptoHelpers {
     * @param base64encodedLicenseFile A string holding an encoded and signed license in base 64 format.
     * @return A tuple with a license validation result and an option to the decrypted license.
     */
+  @SuppressWarnings(Array("org.wartremover.warts.AsInstanceOf"))
   def decryptBase64EncodedLicense(
       base64encodedLicenseFile: String
   ): (LicenseValidationResult, Option[TenseiLicense]) =
@@ -216,10 +219,10 @@ trait ChefDeCuisineHelpers extends CryptoHelpers {
                    None)
                 else {
                   val license = Parse.decodeOption[TenseiLicense](licenseParts(0))
-                  if (license.isEmpty)
+                  license.fold[(LicenseValidationResult, Option[TenseiLicense])](
                     (LicenseValidationResult.Invalid(Option(InvalidLicenseReason.Damaged)), None)
-                  else {
-                    if (license.get.expiresIn.isNegative)
+                  ) { l =>
+                    if (l.expiresIn.isNegative)
                       (LicenseValidationResult.Invalid(Option(InvalidLicenseReason.Expired)),
                        license)
                     else

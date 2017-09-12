@@ -35,6 +35,7 @@ object SemanticMappingSuggesterActor {
   * An actor that provides a simple semantic mapping suggester.
   */
 class SemanticMappingSuggesterActor extends SemanticSuggester with Actor with ActorLogging {
+  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   override def receive: Receive = {
     case MappingSuggesterMessages.SuggestMapping(cookbook, mode, answerTo) =>
       log.debug("Got semantic suggest mapping message.")
