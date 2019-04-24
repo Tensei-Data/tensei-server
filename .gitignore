@@ -31,4 +31,7 @@ Desktop.ini
 logs/
 # Lizenzdaten
 *.license
-
+# Bloop
+.bloop/
+# Metals
+.metals/
